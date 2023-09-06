@@ -4,6 +4,7 @@ from minilex import tokens
 GlobalEnv = {}
 
 precedence = (
+    ('nonassoc', 'LT'),  # Nonassociative operators
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'UMINUS'),            # Unary minus operator
@@ -15,20 +16,30 @@ BuiltinBinaryOperators = {
     '*' : lambda x,y: x*y,
     '/' : lambda x,y: x/y,
     '<' : lambda x,y: x<y,
-    '<=' : lambda x,y: x<=y,
-    '>' : lambda x,y: x>y,
-    '>=' : lambda x,y: x>=y,
-    '==' : lambda x,y : x==y
 }
 
 def p_program(p):
     '''program : expression
-               | assignment'''
+               | statement'''
+    p[0] = p[1]
+
+def p_statement(p):
+    '''statement : assignment
+                 | funcdef'''
     p[0] = p[1]
 
 def p_assignment(p):
-    '''assignment : ID ASSIGN NUMBER'''
+    '''assignment : ID ASSIGN expression'''
     GlobalEnv[p[1]] = p[3]
+
+def p_funcdef(p):
+    'funcdef : FUNC ID LPAREN RPAREN LSQB RET expression RSQB'
+    x = p[7]
+    GlobalEnv[p[2]] = lambda : x
+
+def p_expression_func_call(p):
+    'expression : ID LPAREN RPAREN'
+    p[0] = GlobalEnv[p[1]]()
 
 def p_expression_lookup(p):
     'expression : ID'
@@ -41,10 +52,7 @@ def p_expression_binop(p):
                   | expression MINUS expression
                   | expression TIMES expression
                   | expression DIVIDE expression
-                  | expression LT expression
-                  | expression LE expression
-                  | expression GT expression
-                  | expression GE expression'''
+                  | expression LT expression'''
     p[0] = BuiltinBinaryOperators[p[2]](p[1], p[3])
 
 def p_expression_group(p):
@@ -61,7 +69,7 @@ def p_expression_number(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    print("Syntax error in input!")
+    raise Exception("Syntax error in input!")
 
 # Build the parser
 parser = yacc.yacc(start='program')

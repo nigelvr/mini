@@ -1,8 +1,15 @@
 import ply.lex as lex
 
+reserved = {
+    'func' : 'FUNC',
+    'return' : 'RET'
+}
+
 # List of token names.   This is always required
 tokens = (
    'NUMBER',
+   'FUNC',
+   'RET',
    'ID',
    'ASSIGN',
    'PLUS',
@@ -12,9 +19,9 @@ tokens = (
    'LPAREN',
    'RPAREN',
    'LT',
-   'LE',
-   'GT',
-   'GE'
+   'LSQB',
+   'RSQB',
+   'COMMA'
 )
 
 #t_BINOP = r'\+|-|\*|/'
@@ -28,10 +35,9 @@ t_DIVIDE  = r'/'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 t_LT = r'<'
-t_LE = r'\<='
-t_GT = r'>'
-t_GE = r'\>='
-
+t_LSQB = r'{'
+t_RSQB = r'}'
+t_COMMA = r','
 
 
 # A regular expression rule with some action code
@@ -47,6 +53,7 @@ def t_newline(t):
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
+    t.type = reserved.get(t.value, 'ID')
     return t
 
 # A string containing ignored characters (spaces and tabs)
