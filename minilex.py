@@ -11,6 +11,7 @@ tokens = (
    'FUNC',
    'RET',
    'ID',
+   'SEMICOL',
    'ASSIGN',
    'PLUS',
    'MINUS',
@@ -38,6 +39,7 @@ t_LT = r'<'
 t_LSQB = r'{'
 t_RSQB = r'}'
 t_COMMA = r','
+t_SEMICOL = r';'
 
 
 # A regular expression rule with some action code

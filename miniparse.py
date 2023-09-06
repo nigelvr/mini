@@ -34,14 +34,14 @@ def p_program(p):
     p[0] = p[1]
 
 def p_funcdef(p):
-    'funcdef : FUNC ID LPAREN ID RPAREN LSQB RET expression RSQB'
+    'funcdef : FUNC ID LPAREN ID RPAREN LSQB RET expression SEMICOL RSQB'
     funcname = p[2]
     argname = p[4]
     expr = p[8]
     p[0] = FuncdefAST(funcname, argname, expr)
 
 def p_assignment(p):
-    'assignment : ID ASSIGN expression'
+    'assignment : ID ASSIGN expression SEMICOL'
     ident = p[1]
     expr = p[3]
     p[0] = AssignmentAST(ident, expr)
