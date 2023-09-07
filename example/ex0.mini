@@ -1,7 +1,7 @@
 x=5;
 
-func double(x) {
-    return 2*x;
+func double(y) {
+    return 2*y;
 }
 
-double(x+40)+10
+double(x+20)+10

@@ -41,17 +41,16 @@ def p_program(p):
     p[0] = p[3]
 
 def p_funcdef(p):
-    'funcdef : FUNC ID LPAREN ID RPAREN LSQB RET expression SEMICOL RSQB'
+    'funcdef : FUNC ID LPAREN ID RPAREN LSQB funcpart SEMICOL RSQB'
     funcname = p[2]
     argname = p[4]
-    
-    # XXX
-    tmp_argname = f'{funcname}_{argname}'
-    # go into the expression and replace all occurences of argname with tmp_argname
-    p[8].replace_symbol(argname, tmp_argname)
-    expr = p[8]
+    expr = p[7]
 
-    p[0] = FuncdefAST(funcname, tmp_argname, expr)
+    p[0] = FuncdefAST(funcname, argname, expr)
+
+def p_funcpart(p):
+    'funcpart : RET expression'
+    p[0] = p[2]
 
 def p_assignment(p):
     'assignment : ID ASSIGN expression SEMICOL'
