@@ -38,26 +38,43 @@ class NumberAST(AST):
         return self.root
     
 class FuncdefAST(AST):
-    def __init__(self, funcname, argname, expr):
-        super().__init__(funcname, [argname, expr])
+    def __init__(self, funcname, arglist, expr):
+        print(f'FuncdefAST : funcname={funcname}, arglist={arglist}, expr={expr}')
+        super().__init__(funcname, [arglist, expr])
 
     def emit(self, env):
         env[self.root] = self
         return self
 
 class FuncCallAST(AST):
-    def __init__(self, funcname, argvalue):
-        super().__init__(funcname, [argvalue])
+    def __init__(self, funcname, arglist):
+        print(f'FuncCallAST: funcname={funcname}, arglist={arglist}')
+        super().__init__(funcname, arglist)
 
     def emit(self, env):
         func = env[self.root]
-        argname = func.children[0]
+        argnames = func.children[0]
+        # argname = func.children[0][0]
+        retval = None
+
+        # bind all arguments to environment
+        for k in range(0, len(self.children)):
+            argname = func.children[0][k]
+            expr = self.children[k]
+            env[argname] = expr.emit(env)
+
         # bind, get value, unbind
-        # print(f'argname {argname}')
-        env[argname] = self.children[0].emit(env)
-        val = func.children[1].emit(env)
-        env.pop(argname)
-        return val
+        # env[argname] = self.children[0].emit(env)
+
+        # compute
+        if func.children[1] is not None:
+            retval = func.children[1].emit(env)
+
+        # remove args from environment
+        for k in range(0, len(self.children)):
+            env.pop(func.children[0][k])
+
+        return retval
 
 class IdentAST(AST):
     def __init__(self, ident):

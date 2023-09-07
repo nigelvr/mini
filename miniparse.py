@@ -2,6 +2,7 @@ import ply.yacc as yacc
 from pprint import pprint
 from minilex import tokens
 from miniast import (
+    AST,
     FuncCallAST,
     FuncdefAST,
     IdentAST,
@@ -31,25 +32,60 @@ def printenv():
     pprint(BasicEnvironment)
     print('------------------------')
 
-def p_program(p):
-    '''program : assignment funcdef expression'''
-    # exec the assignment
-    p[1].emit(BasicEnvironment)
-    # exec the funcdef
-    p[2].emit(BasicEnvironment)
+def flatten(L, class_instance, cond = lambda x : True):
+    flat = []
+    for x in L:
+        if isinstance(x, class_instance) and cond(x):
+            flat.append(x)
+        elif isinstance(x, list):
+            flat += flatten(x, class_instance)
+    return flat
 
-    p[0] = p[3]
+def p_program(p):
+    '''program : expression
+               | assignment_list expression
+               | assignment_list funcdef_list expression
+               | funcdef_list expression'''
+    
+    for k in range(1, len(p)-1):
+        block_list = p[k]
+        for block in block_list:
+            block.emit(BasicEnvironment)
+    
+    p[0] = p[len(p)-1]
+
+def p_funcdef_list(p):
+    '''funcdef_list : funcdef
+                    | funcdef_list funcdef'''
+    p[0] = flatten(p[1:], FuncdefAST)
+    
+
+def p_assignment_list(p):
+    '''assignment_list : assignment
+                       | assignment_list assignment'''
+    p[0] = flatten(p[1:], AssignmentAST)
 
 def p_funcdef(p):
-    'funcdef : FUNC ID LPAREN ID RPAREN LSQB funcpart SEMICOL RSQB'
-    funcname = p[2]
-    argname = p[4]
-    expr = p[7]
+    '''funcdef : FUNC ID LPAREN arglist RPAREN LSQB funcpart RSQB
+               | FUNC ID LPAREN arglist RPAREN LSQB RSQB'''
 
-    p[0] = FuncdefAST(funcname, argname, expr)
+    funcname = p[2]
+    expr = None
+
+    arglist = p[4]
+
+    if len(p) == 9: # has a function body
+        expr = p[7]
+
+    p[0] = FuncdefAST(funcname, arglist, expr)
+
+def p_arglist(p):
+    '''arglist : ID
+               | arglist COMMA ID'''
+    p[0] = flatten(p[1:], str, lambda x : x != ',')
 
 def p_funcpart(p):
-    'funcpart : RET expression'
+    'funcpart : RET expression SEMICOL'
     p[0] = p[2]
 
 def p_assignment(p):
@@ -59,10 +95,15 @@ def p_assignment(p):
     p[0] = AssignmentAST(ident, expr)
 
 def p_expression_funccall(p):
-    'expression : ID LPAREN expression RPAREN'
+    'expression : ID LPAREN exprlist RPAREN'
     funcname = p[1]
-    arg = p[3]
-    p[0] = FuncCallAST(funcname, arg)
+    exprlist = p[3]
+    p[0] = FuncCallAST(funcname, exprlist)
+
+def p_exprlist(p):
+    '''exprlist : expression
+                | exprlist COMMA expression'''
+    p[0] = flatten(p[1:], AST)
 
 def p_expression_lookup(p):
     'expression : ID'

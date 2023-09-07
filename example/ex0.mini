@@ -1,7 +1,16 @@
 x=5;
+z=20;
 
 func double(y) {
     return 2*y;
 }
 
-double(x+20)+10
+func add10(u) {
+    return u+10;
+}
+
+func sum(a,b) {
+    return a+b;
+}
+
+add10(double(sum(x,z)))

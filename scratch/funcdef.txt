@@ -1,0 +1,7 @@
+    '''funcdef : FUNC ID LPAREN ID RPAREN LSQB funcpart RSQB
+               | FUNC ID LPAREN ID RPAREN LSQB RSQB'''
+
+funcdef : FUNC ID LPAREN RPAREN LSQB RSQB               7
+        | FUNC ID LPAREN RPAREN LSQB funcpart RSQB      8
+        | FUNC ID LPAREN ID RPAREN LSQB RSQB            8      
+        | FUNC ID LPAREN ID RPAREN LSQB funcpart RSQB   9
