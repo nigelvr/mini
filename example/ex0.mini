@@ -1,0 +1,7 @@
+x=5;
+
+func double(x) {
+    return 2*x;
+}
+
+double(x+40)+10

@@ -1,0 +1,16 @@
+def p_program_segment(p):
+    '''program_segment : assignment
+                       | funcdef'''
+    p[0] = p[1]
+
+def p_program_segment_list(p):
+    '''program_segment_list : 
+                            | program_segment
+                            | program_segment program_segment_list'''
+    L = []
+    for k in range(1, len(p)):
+        L.append(p[k])
+    return L
+
+def p_main_func(p):
+    'mainfunc : func main LPAREN RPAREN LSQB RET expression SEMICOL RSQB'

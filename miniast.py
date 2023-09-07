@@ -25,6 +25,17 @@ class BinopAST(AST):
             self.children[0].emit(env),
             self.children[1].emit(env)
         )
+    
+    def replace_symbol(self, old, new):
+        if isinstance(self.children[0], IdentAST) and self.children[0].root == old:
+            self.children[0].root = new
+        if isinstance(self.children[1], IdentAST) and self.children[1].root == old:
+            self.children[1].root = new
+        if isinstance(self.children[0], BinopAST):
+            self.children[0].replace_symbol(old, new)
+        if isinstance(self.children[1], BinopAST):
+            self.children[1].replace_symbol(old, new)
+        
 
 class NumberAST(AST):
     def __init__(self, number):
@@ -53,10 +64,11 @@ class FuncCallAST(AST):
         func = env[self.root]
         argname = func.children[0]
         # bind, get value, unbind
-        temp_argname = f'{func}_{argname}'
-        env[temp_argname] = self.children[0].emit(env)
+        # temp_argname = f'{func}_{argname}'
+        print(f'argname {argname}')
+        env[argname] = self.children[0].emit(env)
         val = func.children[1].emit(env)
-        env.pop(temp_argname)
+        env.pop(argname)
         return val
 
 class IdentAST(AST):

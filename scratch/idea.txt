@@ -1,0 +1,7 @@
+prog_segment : assignemnt | funcdef
+
+prog_segment_list : 
+                  | prog_segment
+                  | prog segment prog_segment_list
+
+program : prog_segment_list expression

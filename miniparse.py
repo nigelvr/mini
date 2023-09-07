@@ -1,4 +1,5 @@
 import ply.yacc as yacc
+from pprint import pprint
 from minilex import tokens
 from miniast import (
     FuncCallAST,
@@ -25,20 +26,32 @@ BasicEnvironment = {
     '<' : lambda x,y: x<y,
 }
 
-
+def printenv():
+    print('---Global Environment---')
+    pprint(BasicEnvironment)
+    print('------------------------')
 
 def p_program(p):
-    '''program : expression
-               | funcdef
-               | assignment'''
-    p[0] = p[1]
+    '''program : assignment funcdef expression'''
+    # exec the assignment
+    p[1].emit(BasicEnvironment)
+    # exec the funcdef
+    p[2].emit(BasicEnvironment)
+
+    p[0] = p[3]
 
 def p_funcdef(p):
     'funcdef : FUNC ID LPAREN ID RPAREN LSQB RET expression SEMICOL RSQB'
     funcname = p[2]
     argname = p[4]
+    
+    # XXX
+    tmp_argname = f'{funcname}_{argname}'
+    # go into the expression and replace all occurences of argname with tmp_argname
+    p[8].replace_symbol(argname, tmp_argname)
     expr = p[8]
-    p[0] = FuncdefAST(funcname, argname, expr)
+
+    p[0] = FuncdefAST(funcname, tmp_argname, expr)
 
 def p_assignment(p):
     'assignment : ID ASSIGN expression SEMICOL'
@@ -83,11 +96,6 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc(start='program')
 
-while True:
-   try:
-       s = input('calc > ')
-   except EOFError:
-       break
-   if not s: continue
-   result = parser.parse(s)
-   print(result.emit(BasicEnvironment))
+with open('./example/ex0.mini', 'r') as fd:
+    result = parser.parse(fd.read())
+    print(result.emit(BasicEnvironment))

@@ -1,0 +1,9 @@
+x = 5
+
+func double(x) {
+    return x*2;
+}
+
+func main() {
+    return double(x);
+}
