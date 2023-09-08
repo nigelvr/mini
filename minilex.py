@@ -2,7 +2,8 @@ import ply.lex as lex
 
 reserved = {
     'func' : 'FUNC',
-    'return' : 'RET'
+    'return' : 'RET',
+    'if' : 'IF'
 }
 
 # List of token names.   This is always required
@@ -10,6 +11,7 @@ tokens = (
    'NUMBER',
    'FUNC',
    'RET',
+   'IF',
    'ID',
    'SEMICOL',
    'ASSIGN',

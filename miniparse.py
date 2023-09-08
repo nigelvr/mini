@@ -9,7 +9,8 @@ from miniast import (
     NumberAST,
     BinopAST,
     UnaryAST,
-    AssignmentAST
+    AssignmentAST,
+    ReturnAST
 )
 
 precedence = (
@@ -58,7 +59,6 @@ def p_funcdef_list(p):
     '''funcdef_list : funcdef
                     | funcdef_list funcdef'''
     p[0] = flatten(p[1:], FuncdefAST)
-    
 
 def p_assignment_list(p):
     '''assignment_list : assignment
@@ -85,8 +85,13 @@ def p_arglist(p):
     p[0] = flatten(p[1:], str, lambda x : x != ',')
 
 def p_funcpart(p):
-    'funcpart : RET expression SEMICOL'
-    p[0] = p[2]
+    '''funcpart : ret'''
+    p[0] = p[1]
+
+def p_ret(p):
+    'ret : RET expression SEMICOL'
+    expr = p[2]
+    p[0] = ReturnAST(expr)
 
 def p_assignment(p):
     'assignment : ID ASSIGN expression SEMICOL'
@@ -136,6 +141,8 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc(start='program')
 
-with open('./example/ex0.mini', 'r') as fd:
+print('START')
+print()
+with open('./example/ex1.mini', 'r') as fd:
     result = parser.parse(fd.read())
     print(result.emit(BasicEnvironment))

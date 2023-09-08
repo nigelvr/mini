@@ -10,20 +10,40 @@ class UnaryAST(AST):
     def __init__(self, op, value):
         super().__init__(op, [value])
 
+    @property
+    def op(self):
+        return self.root
+    
+    @property
+    def value(self):
+        return self.children[0]
+
     def emit(self, env):
-        if self.root == '+':
-            return self.children[0].emit(env)
-        elif self.root == '-':
-            return -self.children[0].emit(env)
+        if self.op == '+':
+            return self.value.emit(env)
+        elif self.op == '-':
+            return -self.value.emit(env)
 
 class BinopAST(AST):
     def __init__(self, op, p1, p2):
         super().__init__(op, [p1, p2])
     
+    @property
+    def op(self):
+        return self.root
+    
+    @property
+    def o1(self):
+        return self.children[0]
+    
+    @property
+    def o2(self):
+        return self.children[1]
+    
     def emit(self, env):
-        return env[self.root](
-            self.children[0].emit(env),
-            self.children[1].emit(env)
+        return env[self.op](
+            self.o1.emit(env),
+            self.o2.emit(env)
         )
 
 class NumberAST(AST):
@@ -34,16 +54,32 @@ class NumberAST(AST):
         self.root *= -1
         return self
     
-    def emit(self, env=None):
+    @property
+    def value(self):
         return self.root
     
+    def emit(self, env=None):
+        return self.value
+    
 class FuncdefAST(AST):
-    def __init__(self, funcname, arglist, expr):
-        print(f'FuncdefAST : funcname={funcname}, arglist={arglist}, expr={expr}')
-        super().__init__(funcname, [arglist, expr])
-
+    def __init__(self, funcname, argnamelist, funcbody):
+        print(f'FuncdefAST : funcname={funcname}, argnamelist={argnamelist}, funcbody={funcbody}')
+        super().__init__(funcname, [argnamelist, funcbody])
+    
+    @property
+    def funcname(self):
+        return self.root
+    
+    @property
+    def argnamelist(self):
+        return self.children[0]
+    
+    @property
+    def funcbody(self):
+        return self.children[1]
+    
     def emit(self, env):
-        env[self.root] = self
+        env[self.funcname] = self
         return self
 
 class FuncCallAST(AST):
@@ -51,30 +87,46 @@ class FuncCallAST(AST):
         print(f'FuncCallAST: funcname={funcname}, arglist={arglist}')
         super().__init__(funcname, arglist)
 
+    @property
+    def funcname(self):
+        return self.root
+    
+    @property
+    def arglist(self):
+        return self.children
+    
+    def bound_args(self, env):
+        func = env[self.funcname]
+        return dict(zip(func.argnamelist, self.arglist))
+
     def emit(self, env):
-        func = env[self.root]
-        argnames = func.children[0]
-        # argname = func.children[0][0]
+        func = env[self.funcname]
         retval = None
 
-        # bind all arguments to environment
-        for k in range(0, len(self.children)):
-            argname = func.children[0][k]
-            expr = self.children[k]
-            env[argname] = expr.emit(env)
-
-        # bind, get value, unbind
-        # env[argname] = self.children[0].emit(env)
+        # bind arguments
+        for argname, argexpr in self.bound_args(env).items():
+            env[argname] = argexpr.emit(env)
 
         # compute
-        if func.children[1] is not None:
-            retval = func.children[1].emit(env)
+        if func.funcbody is not None:
+            retval = func.funcbody.emit(env)
 
-        # remove args from environment
-        for k in range(0, len(self.children)):
-            env.pop(func.children[0][k])
+        # unbind arguments
+        for argname, _ in self.bound_args(env).items():
+            env.pop(argname)
 
         return retval
+
+class ReturnAST(AST):
+    def __init__(self, expr):
+        super().__init__(expr, [])
+
+    @property
+    def expr(self):
+        return self.root
+    
+    def emit(self, env):
+        return self.root.emit(env)
 
 class IdentAST(AST):
     def __init__(self, ident):
