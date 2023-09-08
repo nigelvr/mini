@@ -108,12 +108,21 @@ class FuncCallAST(AST):
             env[argname] = argexpr.emit(env)
 
         # compute
-        if func.funcbody is not None:
-            retval = func.funcbody.emit(env)
+        for funcpart in func.funcbody:
+            val = funcpart.emit(env)
+            if isinstance(funcpart, ReturnAST):
+                retval = val
+                break
 
         # unbind arguments
         for argname, _ in self.bound_args(env).items():
             env.pop(argname)
+
+        # undo all the assignments from the function body
+        for funcpart in func.funcbody:
+            if isinstance(funcpart, AssignmentAST):
+                env.pop(funcpart.symbol)
+
 
         return retval
 
@@ -138,6 +147,10 @@ class IdentAST(AST):
 class AssignmentAST(AST):
     def __init__(self, ident, expr):
         super().__init__(ident, [expr])
+
+    @property
+    def symbol(self):
+        return self.root
     
     def emit(self, env):
         env[self.root] = self.children[0].emit(env)

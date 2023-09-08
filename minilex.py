@@ -3,7 +3,9 @@ import ply.lex as lex
 reserved = {
     'func' : 'FUNC',
     'return' : 'RET',
-    'if' : 'IF'
+    'if' : 'IF',
+    'or' : 'OR',
+    'and' : 'AND'
 }
 
 # List of token names.   This is always required
@@ -12,8 +14,15 @@ tokens = (
    'FUNC',
    'RET',
    'IF',
+   'OR',
+   'AND',
    'ID',
    'SEMICOL',
+   'EQUALS',
+   'LT',
+   'LEQ',
+   'GT',
+   'GEQ',
    'ASSIGN',
    'PLUS',
    'MINUS',
@@ -21,7 +30,6 @@ tokens = (
    'DIVIDE',
    'LPAREN',
    'RPAREN',
-   'LT',
    'LSQB',
    'RSQB',
    'COMMA'
@@ -30,6 +38,9 @@ tokens = (
 #t_BINOP = r'\+|-|\*|/'
 
 # Regular expression rules for simple tokens
+t_EQUALS = r'=='
+t_LEQ = '<='
+t_GEQ = '>='
 t_ASSIGN = r'='
 t_PLUS    = r'\+'
 t_MINUS   = r'-'
@@ -38,6 +49,7 @@ t_DIVIDE  = r'/'
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 t_LT = r'<'
+t_GT = r'>'
 t_LSQB = r'{'
 t_RSQB = r'}'
 t_COMMA = r','

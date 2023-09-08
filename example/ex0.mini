@@ -2,7 +2,8 @@ x=5;
 z=20;
 
 func double(y) {
-    return 2*y;
+    factor = 2;
+    return factor*y;
 }
 
 func add10(u) {
