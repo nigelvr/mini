@@ -30,6 +30,8 @@ tokens = (
    'DIVIDE',
    'LPAREN',
    'RPAREN',
+   'OPBR',
+   'CLBR',
    'LSQB',
    'RSQB',
    'COMMA'
@@ -50,11 +52,16 @@ t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 t_LT = r'<'
 t_GT = r'>'
-t_LSQB = r'{'
-t_RSQB = r'}'
+t_OPBR = r'{'
+t_CLBR = r'}'
+t_LSQB = r'\['
+t_RSQB = r'\]'
 t_COMMA = r','
 t_SEMICOL = r';'
 
+def t_COMMENT(t):
+    r'\#.*'
+    pass
 
 # A regular expression rule with some action code
 def t_NUMBER(t):

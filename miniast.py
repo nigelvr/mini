@@ -104,7 +104,6 @@ class FuncCallAST(AST):
         tmpenv = env.copy()
         
         func = tmpenv[self.funcname]
-        retval = None
 
         # bind arguments
         for argname, argexpr in self.bound_args(tmpenv).items():

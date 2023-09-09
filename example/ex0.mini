@@ -1,6 +1,5 @@
 x=5;
 
-
 func double(y) {
     factor = 2;
     return factor*y;
@@ -16,4 +15,11 @@ func sum(a,b) {
     return a+b;
 }
 
-add10(double(sum(x,z)))
+func recsum(a,b) {
+    if (b == 0) {
+        return a;
+    }
+    return recsum(a+1,b-1);
+}
+
+add10(double(recsum(x,z)))

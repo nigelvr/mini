@@ -68,10 +68,10 @@ def p_preprog(p):
     p[0] = flatten(p[1:], AST)
 
 def p_funcdef(p):
-    '''funcdef : FUNC ID LPAREN arglist RPAREN LSQB funcbody RSQB
-               | FUNC ID LPAREN arglist RPAREN LSQB RSQB
-               | FUNC ID LPAREN RPAREN LSQB funcbody RSQB
-               | FUNC ID LPAREN RPAREN LSQB RSQB'''
+    '''funcdef : FUNC ID LPAREN arglist RPAREN OPBR funcbody CLBR
+               | FUNC ID LPAREN arglist RPAREN OPBR CLBR
+               | FUNC ID LPAREN RPAREN OPBR funcbody CLBR
+               | FUNC ID LPAREN RPAREN OPBR CLBR'''
 
     funcname = p[2]
     arglist = []
@@ -113,7 +113,7 @@ def p_assignment(p):
     p[0] = AssignmentAST(ident, expr)
 
 def p_if(p):
-    'if : IF LPAREN expression RPAREN LSQB funcbody RSQB'
+    'if : IF LPAREN expression RPAREN OPBR funcbody CLBR'
     cond = p[3]
     body = p[6]
     p[0] = IfAST(cond, body)
@@ -171,7 +171,7 @@ print('START')
 printenv()
 print()
 
-with open('./example/ex0.mini', 'r') as fd:
+with open('./example/fibfact.mini', 'r') as fd:
     result = parser.parse(fd.read())
     print(result.emit(BasicEnvironment))
 
