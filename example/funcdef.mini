@@ -1,0 +1,16 @@
+
+func foo(x) {
+    return x+1;
+}
+
+func bar(x) {
+}
+
+func quux() {
+    return 1;
+}
+
+func qwerty() {
+}
+
+1

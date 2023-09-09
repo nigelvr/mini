@@ -117,16 +117,6 @@ class FuncCallAST(AST):
                 retval = val
                 break
 
-        # unbind arguments
-        #for argname, _ in self.bound_args(env).items():
-        #    env.pop(argname)
-
-        # undo all the assignments from the function body
-        #for funcpart in func.funcbody:
-        #    if isinstance(funcpart, AssignmentAST):
-        #        env.pop(funcpart.symbol)
-
-
         return retval
 
 class ReturnAST(AST):
@@ -179,4 +169,3 @@ class IfAST(AST):
                 if isinstance(b, ReturnAST):
                     print(f'IfAST.emit : return={val}')
                     return val
-                

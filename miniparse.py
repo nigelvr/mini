@@ -16,8 +16,7 @@ from miniast import (
 
 precedence = (
     ('nonassoc', 'LEQ', 'GEQ', 'AND'),  # Nonassociative operators
-    ('left', 'GT', 'OR'),
-    ('left', 'LT', 'OR'),
+    ('left', 'GT', 'LT'),
     ('left', 'EQUALS', 'OR'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
@@ -53,39 +52,36 @@ def flatten(L, class_instance, cond = lambda x : True):
     return flat
 
 def p_program(p):
-    '''program : expression
-               | assignment_list expression
-               | assignment_list funcdef_list expression
-               | funcdef_list expression'''
+    '''program : preprog expression'''
+    preprog = p[1]
+    print(f'preprog : {preprog}')
+    for preprog_block in preprog:
+        preprog_block.emit(BasicEnvironment)
     
-    for k in range(1, len(p)-1):
-        block_list = p[k]
-        for block in block_list:
-            block.emit(BasicEnvironment)
-    
-    p[0] = p[len(p)-1]
+    p[0] = p[2]
 
-def p_funcdef_list(p):
-    '''funcdef_list : funcdef
-                    | funcdef_list funcdef'''
-    p[0] = flatten(p[1:], FuncdefAST)
-
-def p_assignment_list(p):
-    '''assignment_list : assignment
-                       | assignment_list assignment'''
-    p[0] = flatten(p[1:], AssignmentAST)
+def p_preprog(p):
+    '''preprog : assignment
+               | funcdef
+               | preprog assignment
+               | preprog funcdef'''
+    p[0] = flatten(p[1:], AST)
 
 def p_funcdef(p):
     '''funcdef : FUNC ID LPAREN arglist RPAREN LSQB funcbody RSQB
-               | FUNC ID LPAREN arglist RPAREN LSQB RSQB'''
+               | FUNC ID LPAREN arglist RPAREN LSQB RSQB
+               | FUNC ID LPAREN RPAREN LSQB funcbody RSQB
+               | FUNC ID LPAREN RPAREN LSQB RSQB'''
 
     funcname = p[2]
+    arglist = []
     funcbody = []
 
-    arglist = p[4]
+    if isinstance(p[4], list): # we have an arglist
+        arglist = p[4]
 
-    if len(p) == 9: # has a function body
-        funcbody = p[7]
+    if isinstance(p[len(p)-2], list): # we have a function body
+        funcbody = p[len(p)-2]
 
     p[0] = FuncdefAST(funcname, arglist, funcbody)
 
@@ -175,7 +171,7 @@ print('START')
 printenv()
 print()
 
-with open('./example/fib.mini', 'r') as fd:
+with open('./example/ex0.mini', 'r') as fd:
     result = parser.parse(fd.read())
     print(result.emit(BasicEnvironment))
 

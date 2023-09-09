@@ -1,10 +1,12 @@
 x=5;
-z=20;
+
 
 func double(y) {
     factor = 2;
     return factor*y;
 }
+
+z=20;
 
 func add10(u) {
     return u+10;
