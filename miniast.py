@@ -26,6 +26,7 @@ class UnaryAST(AST):
 
 class BinopAST(AST):
     def __init__(self, op, p1, p2):
+        print(f'BinopAST: op={op}, p1={p1}, p2={p2}')
         super().__init__(op, [p1, p2])
     
     @property
@@ -100,28 +101,30 @@ class FuncCallAST(AST):
         return dict(zip(func.argnamelist, self.arglist))
 
     def emit(self, env):
-        func = env[self.funcname]
+        tmpenv = env.copy()
+        
+        func = tmpenv[self.funcname]
         retval = None
 
         # bind arguments
-        for argname, argexpr in self.bound_args(env).items():
-            env[argname] = argexpr.emit(env)
+        for argname, argexpr in self.bound_args(tmpenv).items():
+            tmpenv[argname] = argexpr.emit(tmpenv)
 
         # compute
         for funcpart in func.funcbody:
-            val = funcpart.emit(env)
-            if isinstance(funcpart, ReturnAST):
+            val = funcpart.emit(tmpenv)
+            if isinstance(funcpart, ReturnAST) or (isinstance(funcpart, IfAST) and val is not None):
                 retval = val
                 break
 
         # unbind arguments
-        for argname, _ in self.bound_args(env).items():
-            env.pop(argname)
+        #for argname, _ in self.bound_args(env).items():
+        #    env.pop(argname)
 
         # undo all the assignments from the function body
-        for funcpart in func.funcbody:
-            if isinstance(funcpart, AssignmentAST):
-                env.pop(funcpart.symbol)
+        #for funcpart in func.funcbody:
+        #    if isinstance(funcpart, AssignmentAST):
+        #        env.pop(funcpart.symbol)
 
 
         return retval
@@ -155,3 +158,25 @@ class AssignmentAST(AST):
     def emit(self, env):
         env[self.root] = self.children[0].emit(env)
         return env[self.root]
+    
+class IfAST(AST):
+    def __init__(self, cond, body):
+        print(f'IfAST : cond={cond}, body={body}')
+        super().__init__(cond, body)
+    
+    @property
+    def cond(self):
+        return self.root
+    
+    @property
+    def body(self):
+        return self.children
+    
+    def emit(self, env):
+        if self.cond.emit(env):
+            for b in self.body:
+                val = b.emit(env)
+                if isinstance(b, ReturnAST):
+                    print(f'IfAST.emit : return={val}')
+                    return val
+                

@@ -1,0 +1,8 @@
+func abs(x) {
+    if (x < 0) {
+        return x*-1;
+    }
+    return x;
+}
+
+abs(-10) > 0 or 1<0

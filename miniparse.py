@@ -10,11 +10,15 @@ from miniast import (
     BinopAST,
     UnaryAST,
     AssignmentAST,
-    ReturnAST
+    ReturnAST,
+    IfAST
 )
 
 precedence = (
-    ('nonassoc', 'LT', 'LEQ', 'GT', 'GEQ', 'EQUALS', 'AND', 'OR'),  # Nonassociative operators
+    ('nonassoc', 'LEQ', 'GEQ', 'AND'),  # Nonassociative operators
+    ('left', 'GT', 'OR'),
+    ('left', 'LT', 'OR'),
+    ('left', 'EQUALS', 'OR'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'UMINUS')
@@ -97,7 +101,8 @@ def p_funcbody(p):
 
 def p_funcpart(p):
     '''funcpart : ret
-                | assignment'''
+                | assignment
+                | if'''
     p[0] = p[1]
 
 def p_ret(p):
@@ -110,6 +115,12 @@ def p_assignment(p):
     ident = p[1]
     expr = p[3]
     p[0] = AssignmentAST(ident, expr)
+
+def p_if(p):
+    'if : IF LPAREN expression RPAREN LSQB funcbody RSQB'
+    cond = p[3]
+    body = p[6]
+    p[0] = IfAST(cond, body)
 
 def p_expression_funccall(p):
     'expression : ID LPAREN exprlist RPAREN'
@@ -154,6 +165,7 @@ def p_expression_number(p):
 
 # Error rule for syntax errors
 def p_error(p):
+    print(p.type)
     raise Exception("Syntax error in input!")
 
 # Build the parser
@@ -163,7 +175,7 @@ print('START')
 printenv()
 print()
 
-with open('./example/ex0.mini', 'r') as fd:
+with open('./example/fib.mini', 'r') as fd:
     result = parser.parse(fd.read())
     print(result.emit(BasicEnvironment))
 
