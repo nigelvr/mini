@@ -52,14 +52,25 @@ def flatten(L, class_instance, cond = lambda x : True):
     return flat
 
 def p_program(p):
-    '''program : preprog expression
-               | expression'''
+    '''program : preprog funcdef
+               | funcdef'''
     preprog = p[1] if len(p) == 3 else []
     print(f'preprog : {preprog}')
     for preprog_block in preprog:
         preprog_block.emit(BasicEnvironment)
+
+    mainfunc_def = p[len(p)-1]
+    try:
+        assert(mainfunc_def.funcname == 'main')
+    except:
+        raise Exception("Need a main function at end of program.")
     
-    p[0] = p[len(p)-1]
+    # add it to the environment
+    mainfunc_def.emit(BasicEnvironment)
+
+    print('**********Mainfunc added to env')
+    
+    p[0] = FuncCallAST('main', [])
 
 def p_preprog(p):
     '''preprog : assignment

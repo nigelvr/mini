@@ -32,4 +32,7 @@ func fact(n) {
     return n * fact(n-1);
 }
 
-add10(double(recsum(x,z))) + fib(10) + fact(10)
+func main() {
+    arg = 10;
+    return add10(double(recsum(x,z))) + fib(arg) + fact(arg);
+}
