@@ -13,4 +13,4 @@ func fact(n) {
     return n * fact(n-1);
 }
 
-fib(10) + fact(10)
+fib(10) + fact(10) + 60

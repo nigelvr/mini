@@ -11,10 +11,6 @@ func add10(u) {
     return u+10;
 }
 
-func sum(a,b) {
-    return a+b;
-}
-
 func recsum(a,b) {
     if (b == 0) {
         return a;
@@ -22,4 +18,18 @@ func recsum(a,b) {
     return recsum(a+1,b-1);
 }
 
-add10(double(recsum(x,z)))
+func fib(n) {
+    if (n == 0 or n == 1) {
+        return 1;
+    }
+    return fib(n-1) + fib(n-2);
+}
+
+func fact(n) {
+    if (n == 0) {
+        return 1;
+    }
+    return n * fact(n-1);
+}
+
+add10(double(recsum(x,z))) + fib(10) + fact(10)

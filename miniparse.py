@@ -52,13 +52,14 @@ def flatten(L, class_instance, cond = lambda x : True):
     return flat
 
 def p_program(p):
-    '''program : preprog expression'''
-    preprog = p[1]
+    '''program : preprog expression
+               | expression'''
+    preprog = p[1] if len(p) == 3 else []
     print(f'preprog : {preprog}')
     for preprog_block in preprog:
         preprog_block.emit(BasicEnvironment)
     
-    p[0] = p[2]
+    p[0] = p[len(p)-1]
 
 def p_preprog(p):
     '''preprog : assignment
@@ -171,7 +172,7 @@ print('START')
 printenv()
 print()
 
-with open('./example/fibfact.mini', 'r') as fd:
+with open('./example/ex0.mini', 'r') as fd:
     result = parser.parse(fd.read())
     print(result.emit(BasicEnvironment))
 

@@ -1,3 +1,9 @@
+def emit_funcbody(funcbody : list, env):
+    for funcpart in funcbody:
+        val = funcpart.emit(env)
+        if isinstance(funcpart, ReturnAST) or (isinstance(funcpart, IfAST) and val is not None):
+            return val
+
 class AST:
     def __init__(self, root, children):
         self.root = root
@@ -26,7 +32,7 @@ class UnaryAST(AST):
 
 class BinopAST(AST):
     def __init__(self, op, p1, p2):
-        print(f'BinopAST: op={op}, p1={p1}, p2={p2}')
+        # print(f'BinopAST: op={op}, p1={p1}, p2={p2}')
         super().__init__(op, [p1, p2])
     
     @property
@@ -85,7 +91,7 @@ class FuncdefAST(AST):
 
 class FuncCallAST(AST):
     def __init__(self, funcname, arglist):
-        print(f'FuncCallAST: funcname={funcname}, arglist={arglist}')
+        #print(f'FuncCallAST: funcname={funcname}, arglist={arglist}')
         super().__init__(funcname, arglist)
 
     @property
@@ -105,18 +111,11 @@ class FuncCallAST(AST):
         
         func = tmpenv[self.funcname]
 
-        # bind arguments
+        # bind arguments to temporary environment
         for argname, argexpr in self.bound_args(tmpenv).items():
             tmpenv[argname] = argexpr.emit(tmpenv)
 
-        # compute
-        for funcpart in func.funcbody:
-            val = funcpart.emit(tmpenv)
-            if isinstance(funcpart, ReturnAST) or (isinstance(funcpart, IfAST) and val is not None):
-                retval = val
-                break
-
-        return retval
+        return emit_funcbody(func.funcbody, tmpenv)
 
 class ReturnAST(AST):
     def __init__(self, expr):
@@ -150,7 +149,7 @@ class AssignmentAST(AST):
     
 class IfAST(AST):
     def __init__(self, cond, body):
-        print(f'IfAST : cond={cond}, body={body}')
+        #print(f'IfAST : cond={cond}, body={body}')
         super().__init__(cond, body)
     
     @property
@@ -163,8 +162,4 @@ class IfAST(AST):
     
     def emit(self, env):
         if self.cond.emit(env):
-            for b in self.body:
-                val = b.emit(env)
-                if isinstance(b, ReturnAST):
-                    print(f'IfAST.emit : return={val}')
-                    return val
+            return emit_funcbody(self.body, env)
