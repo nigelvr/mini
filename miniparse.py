@@ -1,5 +1,6 @@
 import ply.yacc as yacc
 from pprint import pprint
+
 from minilex import tokens
 from miniast import (
     AST,
@@ -13,6 +14,7 @@ from miniast import (
     ReturnAST,
     IfAST
 )
+from minienv import BasicEnvironment, printenv
 
 precedence = (
     ('nonassoc', 'LEQ', 'GEQ', 'AND'),  # Nonassociative operators
@@ -22,25 +24,6 @@ precedence = (
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'UMINUS')
 )
-
-BasicEnvironment = {
-    '+' : lambda x,y: x+y,
-    '-' : lambda x,y: x-y,
-    '*' : lambda x,y: x*y,
-    '/' : lambda x,y: x/y,
-    '<' : lambda x,y: x<y,
-    '<=' : lambda x,y : x <= y,
-    '>' : lambda x,y : x > y,
-    '>=' : lambda x,y: x >= y,
-    '==' : lambda x,y : x==y,
-    'or' : lambda x,y : x or y,
-    'and' : lambda x,y : x and y
-}
-
-def printenv():
-    print('---Global Environment---')
-    pprint(BasicEnvironment)
-    print('------------------------')
 
 def flatten(L, class_instance, cond = lambda x : True):
     flat = []
@@ -110,7 +93,8 @@ def p_funcbody(p):
 def p_funcpart(p):
     '''funcpart : ret
                 | assignment
-                | if'''
+                | if
+                | proccall'''
     p[0] = p[1]
 
 def p_ret(p):
@@ -130,10 +114,18 @@ def p_if(p):
     body = p[6]
     p[0] = IfAST(cond, body)
 
-def p_expression_funccall(p):
-    'expression : ID LPAREN exprlist RPAREN'
+def p_expression_proccall(p):
+    '''proccall : ID LPAREN exprlist RPAREN SEMICOL
+                  | ID LPAREN RPAREN SEMICOL'''
     funcname = p[1]
-    exprlist = p[3]
+    exprlist = p[3] if len(p) == 6 else []
+    p[0] = FuncCallAST(funcname, exprlist)
+
+def p_expression_funccall(p):
+    '''expression : ID LPAREN exprlist RPAREN
+                  | ID LPAREN RPAREN'''
+    funcname = p[1]
+    exprlist = p[3] if len(p) == 5 else []
     p[0] = FuncCallAST(funcname, exprlist)
 
 def p_exprlist(p):
@@ -178,15 +170,3 @@ def p_error(p):
 
 # Build the parser
 parser = yacc.yacc(start='program')
-
-print('START')
-printenv()
-print()
-
-with open('./example/ex0.mini', 'r') as fd:
-    result = parser.parse(fd.read())
-    print(result.emit(BasicEnvironment))
-
-print()
-print('DONE')
-printenv()

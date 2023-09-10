@@ -1,11 +1,12 @@
+# Global variables
 x=5;
+z=20;
 
+# Function definitions
 func double(y) {
     factor = 2;
     return factor*y;
 }
-
-z=20;
 
 func add10(u) {
     return u+10;
@@ -32,7 +33,15 @@ func fact(n) {
     return n * fact(n-1);
 }
 
+# set global variable inside function
+func setter() {
+    x=0;
+    return 0;
+}
+
+# Main function
 func main() {
-    arg = 10;
+    arg = 0;
+    setter();
     return add10(double(recsum(x,z))) + fib(arg) + fact(arg);
 }

@@ -1,8 +1,21 @@
+from minienv import BasicEnvironment
+
 def emit_funcbody(funcbody : list, env):
     for funcpart in funcbody:
-        val = funcpart.emit(env)
-        if isinstance(funcpart, ReturnAST) or (isinstance(funcpart, IfAST) and val is not None):
-            return val
+        if isinstance(funcpart, ReturnAST):
+            return funcpart.emit(env)
+        elif isinstance(funcpart, IfAST):
+            val = funcpart.emit(env)
+            if val is not None: # this was a return statement
+                return val
+        elif isinstance(funcpart, AssignmentAST):
+            if funcpart.symbol in BasicEnvironment.keys():
+                funcpart.emit(BasicEnvironment)
+            else:
+                funcpart.emit(env)
+        elif isinstance(funcpart, FuncCallAST): # procedure
+            funcpart.emit(env)
+
 
 class AST:
     def __init__(self, root, children):
@@ -107,6 +120,7 @@ class FuncCallAST(AST):
         return dict(zip(func.argnamelist, self.arglist))
 
     def emit(self, env):
+        print(f'Calling {self.funcname}')
         tmpenv = env.copy()
         
         func = tmpenv[self.funcname]
@@ -133,6 +147,8 @@ class IdentAST(AST):
         super().__init__(ident, [])
     
     def emit(self, env):
+        if self.root in BasicEnvironment.keys():
+            return BasicEnvironment[self.root]
         return env[self.root]
     
 class AssignmentAST(AST):
@@ -145,6 +161,7 @@ class AssignmentAST(AST):
     
     def emit(self, env):
         env[self.root] = self.children[0].emit(env)
+        print(f'Assignment {self.root} {env[self.root]}')
         return env[self.root]
     
 class IfAST(AST):
