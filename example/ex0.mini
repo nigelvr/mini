@@ -41,7 +41,7 @@ func setter() {
 
 # Main function
 func main() {
-    arg = 0;
+    arg = 5;
     setter();
     return add10(double(recsum(x,z))) + fib(arg) + fact(arg);
 }

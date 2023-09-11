@@ -66,13 +66,9 @@ class BinopAST(AST):
             self.o2.emit(env)
         )
 
-class NumberAST(AST):
-    def __init__(self, number):
-        super().__init__(number, [])
-
-    def negate(self):
-        self.root *= -1
-        return self
+class ValueAST(AST):
+    def __init__(self, val):
+        super().__init__(val, [])
     
     @property
     def value(self):
@@ -80,6 +76,20 @@ class NumberAST(AST):
     
     def emit(self, env=None):
         return self.value
+    
+class NumberAST(ValueAST):
+    def emit(self, env=None):
+        return self.value
+
+class ListAST(ValueAST):
+    def emit(self, env=None):
+        L = []
+        for l in self.value:
+            L.append(l.emit(env))
+        return L
+    
+    def access(self, idx, env=None):
+        return self.value[idx].emit(env)
     
 class FuncdefAST(AST):
     def __init__(self, funcname, argnamelist, funcbody):
@@ -143,13 +153,26 @@ class ReturnAST(AST):
         return self.root.emit(env)
 
 class IdentAST(AST):
-    def __init__(self, ident):
-        super().__init__(ident, [])
+    def __init__(self, ident, subscript_list=[]):
+        super().__init__(ident, subscript_list)
+
+    @property
+    def subscript_list(self):
+        return self.children
     
     def emit(self, env):
+        # Chose the right environment
+        E = env
         if self.root in BasicEnvironment.keys():
-            return BasicEnvironment[self.root]
-        return env[self.root]
+            E = BasicEnvironment
+        # If we have subscripts, get the indexed value
+        if self.subscript_list != []:
+            subscripts = self.subscript_list
+            value = E[self.root]
+            while subscripts:
+                value = value[subscripts.pop(0)]
+            return value
+        return E[self.root]
     
 class AssignmentAST(AST):
     def __init__(self, ident, expr):

@@ -8,6 +8,7 @@ from miniast import (
     FuncdefAST,
     IdentAST,
     NumberAST,
+    ListAST,
     BinopAST,
     UnaryAST,
     AssignmentAST,
@@ -128,14 +129,34 @@ def p_expression_funccall(p):
     exprlist = p[3] if len(p) == 5 else []
     p[0] = FuncCallAST(funcname, exprlist)
 
+def p_expression_list(p):
+    '''expression : LSQB RSQB
+                  | LSQB exprlist RSQB'''
+    L = [] if len(p) == 3 else p[2]
+    p[0] = ListAST(L)
+
 def p_exprlist(p):
     '''exprlist : expression
                 | exprlist COMMA expression'''
     p[0] = flatten(p[1:], AST)
 
 def p_expression_lookup(p):
-    'expression : ID'
-    p[0] = IdentAST(p[1])
+    '''expression : ID
+                  | ID subscript_list'''
+    ident = p[1]
+    subscript_list = [] if len(p) == 2 else p[2]
+    print(f'subscript list: {subscript_list}')
+    p[0] = IdentAST(ident, subscript_list)
+
+def p_subscript_list(p):
+    '''subscript_list : LSQB NUMBER RSQB
+                      | subscript_list LSQB NUMBER RSQB'''
+    L = []
+    if len(p) == 4:
+        L += [p[2]]
+    else:
+        L = p[1] + [p[3]]
+    p[0] = flatten(L, int)
 
 def p_expression_binop(p):
     '''expression : expression PLUS expression
