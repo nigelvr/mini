@@ -16,6 +16,16 @@ def emit_funcbody(funcbody : list, env):
         elif isinstance(funcpart, FuncCallAST): # procedure
             funcpart.emit(env)
 
+def list_assign(L, indicies, value):
+    print(f'list assign: {L} {indicies} {value}')
+    if len(indicies) == 1:
+        L[indicies.pop(0)] = value
+    else:
+        U = L
+        while len(indicies) > 1:
+            U = L[indicies.pop(0)]
+        U[indicies.pop(0)] = value
+
 
 class AST:
     def __init__(self, root, children):
@@ -157,6 +167,10 @@ class IdentAST(AST):
         super().__init__(ident, subscript_list)
 
     @property
+    def name(self):
+        return self.root
+
+    @property
     def subscript_list(self):
         return self.children
     
@@ -166,12 +180,14 @@ class IdentAST(AST):
         if self.root in BasicEnvironment.keys():
             E = BasicEnvironment
         # If we have subscripts, get the indexed value
+        print(E)
         if self.subscript_list != []:
             subscripts = self.subscript_list
             value = E[self.root]
             while subscripts:
                 value = value[subscripts.pop(0)]
             return value
+        # No subscripts
         return E[self.root]
     
 class AssignmentAST(AST):
@@ -180,12 +196,16 @@ class AssignmentAST(AST):
 
     @property
     def symbol(self):
-        return self.root
+        return self.root.name
     
     def emit(self, env):
-        env[self.root] = self.children[0].emit(env)
-        print(f'Assignment {self.root} {env[self.root]}')
-        return env[self.root]
+        print(self.root.subscript_list)
+        if len(self.root.subscript_list) >= 1:
+            list_assign(env[self.symbol], self.root.subscript_list, self.children[0].emit(env))
+        else:
+            env[self.symbol] = self.children[0].emit(env)
+        print(f'Assignment {self.symbol} {self.root.subscript_list} {env[self.symbol]}')
+        return env[self.symbol]
     
 class IfAST(AST):
     def __init__(self, cond, body):

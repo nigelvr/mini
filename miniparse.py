@@ -104,7 +104,7 @@ def p_ret(p):
     p[0] = ReturnAST(expr)
 
 def p_assignment(p):
-    'assignment : ID ASSIGN expression SEMICOL'
+    'assignment : ident ASSIGN expression SEMICOL'
     ident = p[1]
     expr = p[3]
     p[0] = AssignmentAST(ident, expr)
@@ -141,8 +141,12 @@ def p_exprlist(p):
     p[0] = flatten(p[1:], AST)
 
 def p_expression_lookup(p):
-    '''expression : ID
-                  | ID subscript_list'''
+    '''expression : ident'''
+    p[0] = p[1]
+
+def p_ident(p):
+    '''ident : ID
+             | ID subscript_list'''
     ident = p[1]
     subscript_list = [] if len(p) == 2 else p[2]
     print(f'subscript list: {subscript_list}')
