@@ -1,10 +1,10 @@
-from minienv import BasicEnvironment
+from .minienv import BasicEnvironment
 
 def emit_funcbody(funcbody : list, env):
     for funcpart in funcbody:
         if isinstance(funcpart, ReturnAST):
             return funcpart.emit(env)
-        elif isinstance(funcpart, IfAST):
+        elif isinstance(funcpart, IfAST) or isinstance(funcpart, WhileAST):
             val = funcpart.emit(env)
             if val is not None: # this was a return statement
                 return val
@@ -17,7 +17,6 @@ def emit_funcbody(funcbody : list, env):
             funcpart.emit(env)
 
 def list_assign(L, indicies, value):
-    print(f'list assign: {L} {indicies} {value}')
     if len(indicies) == 1:
         L[indicies.pop(0)] = value
     else:
@@ -55,7 +54,6 @@ class UnaryAST(AST):
 
 class BinopAST(AST):
     def __init__(self, op, p1, p2):
-        # print(f'BinopAST: op={op}, p1={p1}, p2={p2}')
         super().__init__(op, [p1, p2])
     
     @property
@@ -103,7 +101,6 @@ class ListAST(ValueAST):
     
 class FuncdefAST(AST):
     def __init__(self, funcname, argnamelist, funcbody):
-        print(f'FuncdefAST : funcname={funcname}, argnamelist={argnamelist}, funcbody={funcbody}')
         super().__init__(funcname, [argnamelist, funcbody])
     
     @property
@@ -124,7 +121,6 @@ class FuncdefAST(AST):
 
 class FuncCallAST(AST):
     def __init__(self, funcname, arglist):
-        #print(f'FuncCallAST: funcname={funcname}, arglist={arglist}')
         super().__init__(funcname, arglist)
 
     @property
@@ -140,7 +136,6 @@ class FuncCallAST(AST):
         return dict(zip(func.argnamelist, self.arglist))
 
     def emit(self, env):
-        print(f'Calling {self.funcname}')
         tmpenv = env.copy()
         
         func = tmpenv[self.funcname]
@@ -180,12 +175,11 @@ class IdentAST(AST):
         if self.root in BasicEnvironment.keys():
             E = BasicEnvironment
         # If we have subscripts, get the indexed value
-        print(E)
         if self.subscript_list != []:
-            subscripts = self.subscript_list
+            subscripts = self.subscript_list.copy()
             value = E[self.root]
             while subscripts:
-                value = value[subscripts.pop(0)]
+                value = value[subscripts.pop(0).emit(env)]
             return value
         # No subscripts
         return E[self.root]
@@ -199,17 +193,16 @@ class AssignmentAST(AST):
         return self.root.name
     
     def emit(self, env):
-        print(self.root.subscript_list)
         if len(self.root.subscript_list) >= 1:
-            list_assign(env[self.symbol], self.root.subscript_list, self.children[0].emit(env))
+            slist = [s.emit(env) for s in self.root.subscript_list]
+            value = self.children[0].emit(env)
+            list_assign(env[self.symbol], slist, value)
         else:
             env[self.symbol] = self.children[0].emit(env)
-        print(f'Assignment {self.symbol} {self.root.subscript_list} {env[self.symbol]}')
         return env[self.symbol]
     
-class IfAST(AST):
+class FPartAST(AST):
     def __init__(self, cond, body):
-        #print(f'IfAST : cond={cond}, body={body}')
         super().__init__(cond, body)
     
     @property
@@ -219,7 +212,15 @@ class IfAST(AST):
     @property
     def body(self):
         return self.children
-    
+        
+class IfAST(FPartAST):
     def emit(self, env):
         if self.cond.emit(env):
             return emit_funcbody(self.body, env)
+        
+class WhileAST(FPartAST):
+    def emit(self, env):
+        while self.cond.emit(env):
+            v = emit_funcbody(self.body, env)
+            if v is not None:
+                return v

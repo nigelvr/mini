@@ -1,0 +1,12 @@
+func main() {
+    L = [1, 2, 3, 4];
+    k=0;
+    L[k] = L[k] * 2;
+    k=k+1;
+    L[k] = L[k] * 2;
+    k=k+1;
+    L[k] = L[k] * 2;
+    k=k+1;
+    L[k] = L[k] * 2;
+    return L;
+}

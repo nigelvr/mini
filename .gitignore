@@ -1,3 +1,6 @@
 parser.out
 parsetab.py
 *.pyc
+.vscode
+build/
+mini.egg-info/

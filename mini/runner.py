@@ -1,6 +1,6 @@
 import sys
-from minienv import BasicEnvironment, printenv
-from miniparse import parser
+from .minienv import BasicEnvironment, printenv
+from .miniparse import parser
 
 def run(filepath : str):
     printenv()
@@ -14,6 +14,3 @@ def run(filepath : str):
     printenv()
     print('-----------------\n')
     return ret
-    
-if __name__ == '__main__':
-    print(run(sys.argv[1]))

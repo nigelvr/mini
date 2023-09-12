@@ -1,8 +1,8 @@
 import ply.yacc as yacc
 from pprint import pprint
 
-from minilex import tokens
-from miniast import (
+from .minilex import tokens
+from .miniast import (
     AST,
     FuncCallAST,
     FuncdefAST,
@@ -13,14 +13,14 @@ from miniast import (
     UnaryAST,
     AssignmentAST,
     ReturnAST,
-    IfAST
+    IfAST,
+    WhileAST
 )
-from minienv import BasicEnvironment, printenv
+from .minienv import BasicEnvironment, printenv
 
 precedence = (
-    ('nonassoc', 'LEQ', 'GEQ', 'AND'),  # Nonassociative operators
-    ('left', 'GT', 'LT'),
-    ('left', 'EQUALS', 'OR'),
+    ('left', 'GT', 'LT', 'LEQ', 'GEQ'),
+    ('left', 'EQUALS', 'OR', 'AND'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
     ('right', 'UMINUS')
@@ -39,7 +39,6 @@ def p_program(p):
     '''program : preprog funcdef
                | funcdef'''
     preprog = p[1] if len(p) == 3 else []
-    print(f'preprog : {preprog}')
     for preprog_block in preprog:
         preprog_block.emit(BasicEnvironment)
 
@@ -51,8 +50,6 @@ def p_program(p):
     
     # add it to the environment
     mainfunc_def.emit(BasicEnvironment)
-
-    print('**********Mainfunc added to env')
     
     p[0] = FuncCallAST('main', [])
 
@@ -95,7 +92,8 @@ def p_funcpart(p):
     '''funcpart : ret
                 | assignment
                 | if
-                | proccall'''
+                | proccall
+                | while'''
     p[0] = p[1]
 
 def p_ret(p):
@@ -121,6 +119,12 @@ def p_expression_proccall(p):
     funcname = p[1]
     exprlist = p[3] if len(p) == 6 else []
     p[0] = FuncCallAST(funcname, exprlist)
+
+def p_while(p):
+    '''while : WHILE LPAREN expression RPAREN OPBR funcbody CLBR'''
+    cond = p[3]
+    body = p[6]
+    p[0] = WhileAST(cond, body)
 
 def p_expression_funccall(p):
     '''expression : ID LPAREN exprlist RPAREN
@@ -149,18 +153,17 @@ def p_ident(p):
              | ID subscript_list'''
     ident = p[1]
     subscript_list = [] if len(p) == 2 else p[2]
-    print(f'subscript list: {subscript_list}')
     p[0] = IdentAST(ident, subscript_list)
 
 def p_subscript_list(p):
-    '''subscript_list : LSQB NUMBER RSQB
-                      | subscript_list LSQB NUMBER RSQB'''
+    '''subscript_list : LSQB expression RSQB
+                      | subscript_list LSQB expression RSQB'''
     L = []
     if len(p) == 4:
         L += [p[2]]
     else:
         L = p[1] + [p[3]]
-    p[0] = flatten(L, int)
+    p[0] = flatten(L, AST)
 
 def p_expression_binop(p):
     '''expression : expression PLUS expression
