@@ -2,15 +2,9 @@ import sys
 from .minienv import BasicEnvironment, printenv
 from .miniparse import parser
 
-def run(filepath : str):
-    printenv()
-    print('-----------------\n')
+def run(program : str):
+    return parser.parse(program).emit(BasicEnvironment)
 
-    ret = None
+def run_from_path(filepath : str):
     with open(filepath, 'r') as fd:
-        parsed = parser.parse(fd.read())
-        ret = parsed.emit(BasicEnvironment)
-
-    printenv()
-    print('-----------------\n')
-    return ret
+        return run(fd.read())

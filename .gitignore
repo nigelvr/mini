@@ -3,4 +3,5 @@ parsetab.py
 *.pyc
 .vscode
 build/
-mini.egg-info/
+mini.egg-info/*~
+*.egg-info
