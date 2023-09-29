@@ -29,8 +29,19 @@ def list_assign(L, indicies, value):
 '''
 Abstract class for our ASTs
 '''
+# forward decls
 class AST:
-    def __init__(self, root, children):
+    pass
+
+class NumberAST:
+    pass
+
+class BinOpAST:
+    pass
+
+
+class AST:
+    def __init__(self, root : any , children : list[AST]):
         self.root = root
         self.children = children
 
@@ -38,13 +49,13 @@ class AST:
         pass
 
 class UnaryAST(AST):
-    def __init__(self, op, value):
+    def __init__(self, op : str, value : NumberAST):
         super().__init__(op, [value])
 
     @property
     def op(self):
         return self.root
-    
+
     @property
     def value(self):
         return self.children[0]
@@ -56,7 +67,7 @@ class UnaryAST(AST):
             return -self.value.emit(env)
 
 class BinopAST(AST):
-    def __init__(self, op, p1, p2):
+    def __init__(self, op: int | float | str, p1 : BinOpAST, p2 : BinOpAST):
         super().__init__(op, [p1, p2])
     
     @property
@@ -78,7 +89,7 @@ class BinopAST(AST):
         )
 
 class ValueAST(AST):
-    def __init__(self, val):
+    def __init__(self, val : int | float | str | list):
         super().__init__(val, [])
     
     @property
@@ -103,27 +114,24 @@ class ListAST(ValueAST):
         return self.value[idx].emit(env)
     
 class FuncdefAST(AST):
-    def __init__(self, funcname, argnames, funcbody):
-        super().__init__(funcname, [argnames, funcbody])
+    def __init__(self, funcname : str, argnames : list[str], funcbody : list[AST]):
+        super().__init__(funcname, funcbody)
+        self.argnames = argnames
     
     @property
     def funcname(self):
         return self.root
     
     @property
-    def argnames(self):
-        return self.children[0]
-    
-    @property
     def funcbody(self):
-        return self.children[1]
+        return self.children
     
     def emit(self, env):
         env[self.funcname] = self
         return self
 
 class FuncCallAST(AST):
-    def __init__(self, funcname, argvals):
+    def __init__(self, funcname : str, argvals : list[AST]):
         super().__init__(funcname, argvals)
 
     @property
@@ -162,15 +170,12 @@ class ReturnAST(AST):
 
 class IdentAST(AST):
     def __init__(self, ident, subscript_list=[]):
-        super().__init__(ident, subscript_list)
+        super().__init__(ident, [])
+        self.subscript_list = subscript_list
 
     @property
     def name(self):
         return self.root
-
-    @property
-    def subscript_list(self):
-        return self.children
     
     def emit(self, env):
         # Chose the right environment

@@ -6,3 +6,4 @@ build/
 mini.egg-info/*~
 *.egg-info
 .*
+*~
