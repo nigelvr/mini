@@ -1,10 +1,10 @@
-from .minienv import BasicEnvironment
+from .minienv import BasicEnvironment, SpecialBuiltins
 
 def emit_funcbody(funcbody : list, env):
     for funcpart in funcbody:
         if isinstance(funcpart, ReturnAST):
             return funcpart.emit(env)
-        elif isinstance(funcpart, IfAST) or isinstance(funcpart, WhileAST):
+        elif isinstance(funcpart, IfElseAST) or isinstance(funcpart, WhileAST):
             val = funcpart.emit(env)
             if val is not None: # this was a return statement
                 return val
@@ -147,6 +147,11 @@ class FuncCallAST(AST):
         return dict(zip(func.argnames, self.argvals))
 
     def emit(self, env):
+        # special case for print
+        # XXX bit of a hack
+        if self.funcname in SpecialBuiltins.keys():
+            return SpecialBuiltins[self.funcname](*[v.emit(env) for v in self.argvals])
+
         tmpenv = env.copy()
         
         func = tmpenv[self.funcname]
@@ -210,7 +215,7 @@ class AssignmentAST(AST):
         return env[self.symbol]
     
 class FPartAST(AST):
-    def __init__(self, cond, body):
+    def __init__(self, cond : AST, body : list[AST]):
         super().__init__(cond, body)
     
     @property
@@ -221,11 +226,28 @@ class FPartAST(AST):
     def body(self):
         return self.children
         
-class IfAST(FPartAST):
+class IfElseAST(FPartAST):
+    def __init__(self, cond : AST, ifconseq : list[AST], elseconseq : list[AST]):
+        super().__init__(cond, ifconseq + elseconseq)
+        self.iflen = len(ifconseq)
+
+    @property
+    def cond(self):
+        return self.root
+
+    @property
+    def ifconseq(self):
+        return self.children[0:self.iflen]
+
+    @property
+    def elseconseq(self):
+        return self.children[self.iflen:]
+
     def emit(self, env):
         if self.cond.emit(env):
-            return emit_funcbody(self.body, env)
-        
+            return emit_funcbody(self.ifconseq, env)
+        return emit_funcbody(self.elseconseq, env)
+    
 class WhileAST(FPartAST):
     def emit(self, env):
         while self.cond.emit(env):

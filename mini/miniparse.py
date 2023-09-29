@@ -13,7 +13,7 @@ from .miniast import (
     UnaryAST,
     AssignmentAST,
     ReturnAST,
-    IfAST,
+    IfElseAST,
     WhileAST
 )
 from .minienv import BasicEnvironment, printenv
@@ -23,8 +23,7 @@ precedence = (
     ('left', 'EQUALS', 'OR', 'AND'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
-    ('right', 'UMINUS'),
-    ('right', 'UPLUS')
+    ('right', 'UMINUS', 'UPLUS')
 )
 
 '''
@@ -103,7 +102,7 @@ def p_funcbody(p):
 def p_funcpart(p):
     '''funcpart : ret
                 | assignment
-                | if
+                | branch
                 | proccall
                 | while'''
     p[0] = p[1]
@@ -119,11 +118,13 @@ def p_assignment(p):
     expr = p[3]
     p[0] = AssignmentAST(ident, expr)
 
-def p_if(p):
-    'if : IF LPAREN expression RPAREN OPBR funcbody CLBR'
+def p_branch(p):
+    '''branch : IF LPAREN expression RPAREN OPBR funcbody CLBR
+              | IF LPAREN expression RPAREN OPBR funcbody CLBR ELSE OPBR funcbody CLBR'''
     cond = p[3]
-    body = p[6]
-    p[0] = IfAST(cond, body)
+    ifconseq = p[6]
+    elseconseq = [] if len(p) == 8 else p[10]
+    p[0] = IfElseAST(cond, ifconseq, elseconseq)
 
 def p_expression_proccall(p):
     '''proccall : ID LPAREN exprlist RPAREN SEMICOL

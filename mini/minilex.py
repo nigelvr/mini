@@ -6,6 +6,7 @@ reserved = {
     'func' : 'FUNC',
     'return' : 'RET',
     'if' : 'IF',
+    'else' : 'ELSE',
     'or' : 'OR',
     'and' : 'AND'
 }
@@ -18,6 +19,7 @@ tokens = (
    'FUNC',
    'RET',
    'IF',
+   'ELSE',
    'OR',
    'AND',
    'ID',

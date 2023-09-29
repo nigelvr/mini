@@ -11,7 +11,11 @@ BasicEnvironment = {
     '>=' : lambda x,y: x >= y,
     '==' : lambda x,y : x==y,
     'or' : lambda x,y : x or y,
-    'and' : lambda x,y : x and y
+    'and' : lambda x,y : x and y,
+}
+
+SpecialBuiltins = {
+    'print' : print
 }
 
 def printenv():
