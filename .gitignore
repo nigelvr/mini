@@ -5,3 +5,4 @@ parsetab.py
 build/
 mini.egg-info/*~
 *.egg-info
+.*

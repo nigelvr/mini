@@ -23,9 +23,13 @@ precedence = (
     ('left', 'EQUALS', 'OR', 'AND'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE'),
-    ('right', 'UMINUS')
+    ('right', 'UMINUS'),
+    ('right', 'UPLUS')
 )
 
+'''
+Helper functions for emitting ASTs
+'''
 def flatten(L, class_instance, cond = lambda x : True):
     flat = []
     for x in L:
@@ -35,19 +39,31 @@ def flatten(L, class_instance, cond = lambda x : True):
             flat += flatten(x, class_instance)
     return flat
 
+def production_to_function(p):
+    funcname = p[2]
+    arglist = []
+    funcbody = []
+
+    if isinstance(p[4], list): # we have an arglist
+        arglist = p[4]
+
+    if isinstance(p[len(p)-2], list): # we have a function body
+        funcbody = p[len(p)-2]
+
+    return FuncdefAST(funcname, arglist, funcbody)
+
+'''
+Production rules
+'''
 def p_program(p):
-    '''program : preprog funcdef
-               | funcdef'''
+    '''program : preprog mainfunc
+               | mainfunc'''
     preprog = p[1] if len(p) == 3 else []
     for preprog_block in preprog:
         preprog_block.emit(BasicEnvironment)
 
     mainfunc_def = p[len(p)-1]
-    try:
-        assert(mainfunc_def.funcname == 'main')
-    except:
-        raise Exception("Need a main function at end of program.")
-    
+
     # add it to the environment
     mainfunc_def.emit(BasicEnvironment)
     
@@ -60,23 +76,19 @@ def p_preprog(p):
                | preprog funcdef'''
     p[0] = flatten(p[1:], AST)
 
+# seperate rule for func and mainfunc
+# as we want mainfunc at end of program
+def p_mainfunc(p):
+    '''mainfunc : FUNC MAIN LPAREN RPAREN OPBR funcbody CLBR
+                | FUNC MAIN LPAREN RPAREN OPBR CLBR'''
+    p[0] = production_to_function(p)
+
 def p_funcdef(p):
     '''funcdef : FUNC ID LPAREN arglist RPAREN OPBR funcbody CLBR
                | FUNC ID LPAREN arglist RPAREN OPBR CLBR
                | FUNC ID LPAREN RPAREN OPBR funcbody CLBR
                | FUNC ID LPAREN RPAREN OPBR CLBR'''
-
-    funcname = p[2]
-    arglist = []
-    funcbody = []
-
-    if isinstance(p[4], list): # we have an arglist
-        arglist = p[4]
-
-    if isinstance(p[len(p)-2], list): # we have a function body
-        funcbody = p[len(p)-2]
-
-    p[0] = FuncdefAST(funcname, arglist, funcbody)
+    p[0] = production_to_function(p)
 
 def p_arglist(p):
     '''arglist : ID
@@ -186,6 +198,10 @@ def p_expression_group(p):
 def p_expr_uminus(p):
     'expression : MINUS expression %prec UMINUS'
     p[0] = UnaryAST('-', p[2])
+
+def p_expr_uplus(p):
+    'expression : PLUS expression %prec UPLUS'
+    p[0] = UnaryAST('+', p[2])
 
 def p_expression_number(p):
     'expression : NUMBER'

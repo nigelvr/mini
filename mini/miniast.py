@@ -26,6 +26,9 @@ def list_assign(L, indicies, value):
         U[indicies.pop(0)] = value
 
 
+'''
+Abstract class for our ASTs
+'''
 class AST:
     def __init__(self, root, children):
         self.root = root
@@ -100,15 +103,15 @@ class ListAST(ValueAST):
         return self.value[idx].emit(env)
     
 class FuncdefAST(AST):
-    def __init__(self, funcname, argnamelist, funcbody):
-        super().__init__(funcname, [argnamelist, funcbody])
+    def __init__(self, funcname, argnames, funcbody):
+        super().__init__(funcname, [argnames, funcbody])
     
     @property
     def funcname(self):
         return self.root
     
     @property
-    def argnamelist(self):
+    def argnames(self):
         return self.children[0]
     
     @property
@@ -120,20 +123,20 @@ class FuncdefAST(AST):
         return self
 
 class FuncCallAST(AST):
-    def __init__(self, funcname, arglist):
-        super().__init__(funcname, arglist)
+    def __init__(self, funcname, argvals):
+        super().__init__(funcname, argvals)
 
     @property
     def funcname(self):
         return self.root
     
     @property
-    def arglist(self):
+    def argvals(self):
         return self.children
     
     def bound_args(self, env):
         func = env[self.funcname]
-        return dict(zip(func.argnamelist, self.arglist))
+        return dict(zip(func.argnames, self.argvals))
 
     def emit(self, env):
         tmpenv = env.copy()
