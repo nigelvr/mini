@@ -1,5 +1,6 @@
 from .minienv import BasicEnvironment, SpecialBuiltins
 
+# Return, IfElse, While, Assignment, FuncCall (procedure)
 def emit_funcbody(funcbody : list, env):
     for funcpart in funcbody:
         if isinstance(funcpart, ReturnAST):
@@ -41,24 +42,13 @@ class BinOpAST:
 
 
 class AST:
-    def __init__(self, root : any , children : list[AST]):
-        self.root = root
-        self.children = children
-
     def emit(self, env):
         pass
 
 class UnaryAST(AST):
     def __init__(self, op : str, value : NumberAST):
-        super().__init__(op, [value])
-
-    @property
-    def op(self):
-        return self.root
-
-    @property
-    def value(self):
-        return self.children[0]
+        self.op = op
+        self.value = value
 
     def emit(self, env):
         if self.op == '+':
@@ -67,20 +57,10 @@ class UnaryAST(AST):
             return -self.value.emit(env)
 
 class BinopAST(AST):
-    def __init__(self, op: int | float | str, p1 : BinOpAST, p2 : BinOpAST):
-        super().__init__(op, [p1, p2])
-    
-    @property
-    def op(self):
-        return self.root
-    
-    @property
-    def o1(self):
-        return self.children[0]
-    
-    @property
-    def o2(self):
-        return self.children[1]
+    def __init__(self, op: int | float | str, o1 : BinOpAST, o2 : BinOpAST):
+        self.op = op
+        self.o1 = o1
+        self.o2 = o2
     
     def emit(self, env):
         return env[self.op](
@@ -89,12 +69,8 @@ class BinopAST(AST):
         )
 
 class ValueAST(AST):
-    def __init__(self, val : int | float | str | list):
-        super().__init__(val, [])
-    
-    @property
-    def value(self):
-        return self.root
+    def __init__(self, value : int | float | str | list):
+        self.value = value
     
     def emit(self, env=None):
         return self.value
@@ -115,16 +91,9 @@ class ListAST(ValueAST):
     
 class FuncdefAST(AST):
     def __init__(self, funcname : str, argnames : list[str], funcbody : list[AST]):
-        super().__init__(funcname, funcbody)
+        self.funcname = funcname
         self.argnames = argnames
-    
-    @property
-    def funcname(self):
-        return self.root
-    
-    @property
-    def funcbody(self):
-        return self.children
+        self.funcbody = funcbody
     
     def emit(self, env):
         env[self.funcname] = self
@@ -132,15 +101,8 @@ class FuncdefAST(AST):
 
 class FuncCallAST(AST):
     def __init__(self, funcname : str, argvals : list[AST]):
-        super().__init__(funcname, argvals)
-
-    @property
-    def funcname(self):
-        return self.root
-    
-    @property
-    def argvals(self):
-        return self.children
+        self.funcname = funcname
+        self.argvals = argvals
     
     def bound_args(self, env):
         func = env[self.funcname]
@@ -164,84 +126,56 @@ class FuncCallAST(AST):
 
 class ReturnAST(AST):
     def __init__(self, expr):
-        super().__init__(expr, [])
-
-    @property
-    def expr(self):
-        return self.root
+        self.expr = expr
     
     def emit(self, env):
-        return self.root.emit(env)
+        return self.expr.emit(env)
 
 class IdentAST(AST):
-    def __init__(self, ident, subscript_list=[]):
-        super().__init__(ident, [])
+    def __init__(self, name, subscript_list=[]):
+        self.name = name
         self.subscript_list = subscript_list
-
-    @property
-    def name(self):
-        return self.root
     
     def emit(self, env):
         # Chose the right environment
         E = env
-        if self.root in BasicEnvironment.keys():
+        if self.name in BasicEnvironment.keys():
             E = BasicEnvironment
         # If we have subscripts, get the indexed value
         if self.subscript_list != []:
             subscripts = self.subscript_list.copy()
-            value = E[self.root]
+            value = E[self.name]
             while subscripts:
                 value = value[subscripts.pop(0).emit(env)]
             return value
         # No subscripts
-        return E[self.root]
+        return E[self.name]
     
 class AssignmentAST(AST):
     def __init__(self, ident, expr):
-        super().__init__(ident, [expr])
-
-    @property
-    def symbol(self):
-        return self.root.name
+        self.ident  = ident
+        self.symbol = ident.name
+        self.expr = expr
     
     def emit(self, env):
-        if len(self.root.subscript_list) >= 1:
-            slist = [s.emit(env) for s in self.root.subscript_list]
-            value = self.children[0].emit(env)
+        if len(self.ident.subscript_list) >= 1:
+            slist = [s.emit(env) for s in self.ident.subscript_list]
+            value = self.expr.emit(env)
             list_assign(env[self.symbol], slist, value)
         else:
-            env[self.symbol] = self.children[0].emit(env)
+            env[self.symbol] = self.expr.emit(env)
         return env[self.symbol]
     
 class FPartAST(AST):
     def __init__(self, cond : AST, body : list[AST]):
-        super().__init__(cond, body)
-    
-    @property
-    def cond(self):
-        return self.root
-    
-    @property
-    def body(self):
-        return self.children
+        self.cond = cond
+        self.body = body
         
 class IfElseAST(FPartAST):
     def __init__(self, cond : AST, ifconseq : list[AST], elseconseq : list[AST]):
-        super().__init__(cond, ifconseq + elseconseq)
-        self.iflen = len(ifconseq)
-
-    @property
-    def cond(self):
-        return self.root
-
-    @property
-    def ifconseq(self):
-        return self.children[0:self.iflen]
-
-    @property
-    def elseconseq(self):
-        return self.children[self.iflen:]
+        self.cond = cond
+        self.ifconseq = ifconseq
+        self.elseconseq = elseconseq
 
     def emit(self, env):
         if self.cond.emit(env):
