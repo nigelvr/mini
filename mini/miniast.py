@@ -1,5 +1,17 @@
 from .minienv import BasicEnvironment, SpecialBuiltins
 
+'''
+Helpers
+'''
+def list_assign(L, indicies, value):
+    if len(indicies) == 1:
+        L[indicies.pop(0)] = value
+    else:
+        U = L
+        while len(indicies) > 1:
+            U = L[indicies.pop(0)]
+        U[indicies.pop(0)] = value
+
 # Return, IfElse, While, Assignment, FuncCall (procedure)
 def emit_funcbody(funcbody : list, env):
     for funcpart in funcbody:
@@ -16,16 +28,6 @@ def emit_funcbody(funcbody : list, env):
                 funcpart.emit(env)
         elif isinstance(funcpart, FuncCallAST): # procedure
             funcpart.emit(env)
-
-def list_assign(L, indicies, value):
-    if len(indicies) == 1:
-        L[indicies.pop(0)] = value
-    else:
-        U = L
-        while len(indicies) > 1:
-            U = L[indicies.pop(0)]
-        U[indicies.pop(0)] = value
-
 
 '''
 Abstract class for our ASTs
@@ -188,3 +190,15 @@ class WhileAST(FPartAST):
             v = emit_funcbody(self.body, env)
             if v is not None:
                 return v
+
+class ProgramAST(AST):
+    def __init__(self, preprog : list[AST], mainfunc : FuncdefAST):
+        self.preprog = preprog
+        self.mainfunc = mainfunc
+    
+    def emit(self, env=None):
+        # emit the preprog and return the mainfunc
+        for preprog_block in self.preprog:
+            preprog_block.emit(BasicEnvironment)
+        self.mainfunc.emit(BasicEnvironment)
+        return lambda: FuncCallAST('main', []).emit(BasicEnvironment)

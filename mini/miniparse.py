@@ -14,7 +14,8 @@ from .miniast import (
     AssignmentAST,
     ReturnAST,
     IfElseAST,
-    WhileAST
+    WhileAST,
+    ProgramAST
 )
 from .minienv import BasicEnvironment, printenv
 
@@ -58,15 +59,8 @@ def p_program(p):
     '''program : preprog mainfunc
                | mainfunc'''
     preprog = p[1] if len(p) == 3 else []
-    for preprog_block in preprog:
-        preprog_block.emit(BasicEnvironment)
-
-    mainfunc_def = p[len(p)-1]
-
-    # add it to the environment
-    mainfunc_def.emit(BasicEnvironment)
-    
-    p[0] = FuncCallAST('main', [])
+    mainfunc = p[len(p)-1]
+    p[0] = ProgramAST(preprog, mainfunc)
 
 def p_preprog(p):
     '''preprog : assignment
