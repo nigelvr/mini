@@ -167,13 +167,8 @@ class AssignmentAST(AST):
         else:
             env[self.symbol] = self.expr.emit(env)
         return env[self.symbol]
-    
-class FPartAST(AST):
-    def __init__(self, cond : AST, body : list[AST]):
-        self.cond = cond
-        self.body = body
         
-class IfElseAST(FPartAST):
+class IfElseAST(AST):
     def __init__(self, cond : AST, ifconseq : list[AST], elseconseq : list[AST]):
         self.cond = cond
         self.ifconseq = ifconseq
@@ -184,7 +179,11 @@ class IfElseAST(FPartAST):
             return emit_funcbody(self.ifconseq, env)
         return emit_funcbody(self.elseconseq, env)
     
-class WhileAST(FPartAST):
+class WhileAST(AST):
+    def __init__(self, cond, body):
+        self.cond = cond
+        self.body = body
+
     def emit(self, env):
         while self.cond.emit(env):
             v = emit_funcbody(self.body, env)
