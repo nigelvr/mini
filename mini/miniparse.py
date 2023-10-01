@@ -56,10 +56,14 @@ def production_to_function(p):
 Production rules
 '''
 def p_program(p):
-    '''program : preprog mainfunc
-               | mainfunc'''
+    '''program : preprog funcdef
+               | funcdef'''
     preprog = p[1] if len(p) == 3 else []
     mainfunc = p[len(p)-1]
+    
+    if not mainfunc.ismain:
+        raise SyntaxError("Final function in program file must be \"main\"")
+    
     p[0] = ProgramAST(preprog, mainfunc)
 
 def p_preprog(p):
@@ -68,13 +72,6 @@ def p_preprog(p):
                | preprog assignment
                | preprog funcdef'''
     p[0] = flatten(p[1:], AST)
-
-# seperate rule for func and mainfunc
-# as we want mainfunc at end of program
-def p_mainfunc(p):
-    '''mainfunc : FUNC MAIN LPAREN RPAREN OPBR codeblock CLBR
-                | FUNC MAIN LPAREN RPAREN OPBR CLBR'''
-    p[0] = production_to_function(p)
 
 def p_funcdef(p):
     '''funcdef : FUNC ID LPAREN arglist RPAREN OPBR codeblock CLBR
@@ -90,7 +87,7 @@ def p_arglist(p):
 
 def p_codeblock(p):
     '''codeblock : funcpart
-                | codeblock funcpart'''
+                 | codeblock funcpart'''
     p[0] = flatten(p[1:], AST)
 
 def p_funcpart(p):

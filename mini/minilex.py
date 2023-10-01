@@ -1,7 +1,6 @@
 import ply.lex as lex
 
 reserved = {
-    'main' : 'MAIN',
     'while' : 'WHILE',
     'func' : 'FUNC',
     'return' : 'RET',
@@ -14,7 +13,6 @@ reserved = {
 # List of token names.   This is always required
 tokens = (
    'NUMBER',
-   'MAIN',
    'WHILE',
    'FUNC',
    'RET',

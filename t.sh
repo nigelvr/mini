@@ -2,3 +2,4 @@
 pip install .
 cd test
 pytest .
+cd ..

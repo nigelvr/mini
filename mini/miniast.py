@@ -96,6 +96,9 @@ class FuncdefAST(AST):
         self.funcname = funcname
         self.argnames = argnames
         self.codeblock = codeblock
+
+    def ismain(self):
+        return self.funcname == 'main'
     
     def emit(self, env):
         env[self.funcname] = self
