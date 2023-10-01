@@ -80,12 +80,12 @@ class CodeBlockAST(AST):
 
     def emit(self, env):
         for part in self.parts:
-            if isinstance(part, ReturnAST):
-                return part.emit(env)
-            elif isinstance(part, IfElseAST) or isinstance(part, WhileAST) or isinstance(part, CodeBlockAST):
+            if isinstance(part, IfElseAST) or isinstance(part, WhileAST) or isinstance(part, CodeBlockAST):
                 val = part.emit(env)
                 if val is not None: # this was a return statement
                     return val
+            elif isinstance(part, ReturnAST):
+                return part.emit(env)
             elif isinstance(part, AssignmentAST):
                 if part.symbol in BasicEnvironment.keys():
                     part.emit(BasicEnvironment)
@@ -131,7 +131,7 @@ class FuncCallAST(AST):
         for argname, argexpr in self.bound_args(tmpenv).items():
             tmpenv[argname] = argexpr.emit(tmpenv)
 
-        return func.codeblock.emit(tmpenv) # emit_codeblock(func.codeblock, tmpenv)
+        return func.codeblock.emit(tmpenv)
 
 class ReturnAST(AST):
     def __init__(self, expr):
@@ -183,8 +183,8 @@ class IfElseAST(AST):
 
     def emit(self, env):
         if self.cond.emit(env):
-            return self.ifblock.emit(env) # emit_codeblock(self.ifblock, env)
-        return self.elseblock.emit(env) # emit_codeblock(self.elseblock, env)
+            return self.ifblock.emit(env)
+        return self.elseblock.emit(env)
     
 class WhileAST(AST):
     def __init__(self, cond, codeblock):
@@ -193,7 +193,7 @@ class WhileAST(AST):
 
     def emit(self, env):
         while self.cond.emit(env):
-            v = self.codeblock.emit(env) # emit_codeblock(self.codeblock, env)
+            v = self.codeblock.emit(env)
             if v is not None:
                 return v
 
