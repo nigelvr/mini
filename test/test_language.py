@@ -93,3 +93,16 @@ def test_while():
     '''
     assert(run(prog) == 10)
 
+def test_invalid_program():
+    prog = '''
+    func foo() {
+       x=1;
+    }
+    '''
+    errmsg = ''
+    raised = None
+    try:
+       run(prog)
+    except Exception as e:
+       raised = e
+    assert(raised.args[0]=="Final function in program file must be \"main\"")

@@ -97,6 +97,7 @@ class FuncdefAST(AST):
         self.argnames = argnames
         self.codeblock = codeblock
 
+    @property
     def ismain(self):
         return self.funcname == 'main'
     

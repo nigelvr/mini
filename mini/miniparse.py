@@ -62,7 +62,7 @@ def p_program(p):
     mainfunc = p[len(p)-1]
     
     if not mainfunc.ismain:
-        raise SyntaxError("Final function in program file must be \"main\"")
+        raise Exception("Final function in program file must be \"main\"")
     
     p[0] = ProgramAST(preprog, mainfunc)
 
