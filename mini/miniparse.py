@@ -42,15 +42,15 @@ def flatten(L, class_instance, cond = lambda x : True):
 def production_to_function(p):
     funcname = p[2]
     arglist = []
-    funcbody = []
+    codeblock = []
 
     if isinstance(p[4], list): # we have an arglist
         arglist = p[4]
 
     if isinstance(p[len(p)-2], list): # we have a function body
-        funcbody = p[len(p)-2]
+        codeblock = p[len(p)-2]
 
-    return FuncdefAST(funcname, arglist, funcbody)
+    return FuncdefAST(funcname, arglist, codeblock)
 
 '''
 Production rules
@@ -72,14 +72,14 @@ def p_preprog(p):
 # seperate rule for func and mainfunc
 # as we want mainfunc at end of program
 def p_mainfunc(p):
-    '''mainfunc : FUNC MAIN LPAREN RPAREN OPBR funcbody CLBR
+    '''mainfunc : FUNC MAIN LPAREN RPAREN OPBR codeblock CLBR
                 | FUNC MAIN LPAREN RPAREN OPBR CLBR'''
     p[0] = production_to_function(p)
 
 def p_funcdef(p):
-    '''funcdef : FUNC ID LPAREN arglist RPAREN OPBR funcbody CLBR
+    '''funcdef : FUNC ID LPAREN arglist RPAREN OPBR codeblock CLBR
                | FUNC ID LPAREN arglist RPAREN OPBR CLBR
-               | FUNC ID LPAREN RPAREN OPBR funcbody CLBR
+               | FUNC ID LPAREN RPAREN OPBR codeblock CLBR
                | FUNC ID LPAREN RPAREN OPBR CLBR'''
     p[0] = production_to_function(p)
 
@@ -88,9 +88,9 @@ def p_arglist(p):
                | arglist COMMA ID'''
     p[0] = flatten(p[1:], str, lambda x : x != ',')
 
-def p_funcbody(p):
-    '''funcbody : funcpart
-                | funcbody funcpart'''
+def p_codeblock(p):
+    '''codeblock : funcpart
+                | codeblock funcpart'''
     p[0] = flatten(p[1:], AST)
 
 def p_funcpart(p):
@@ -113,8 +113,8 @@ def p_assignment(p):
     p[0] = AssignmentAST(ident, expr)
 
 def p_branch(p):
-    '''branch : IF LPAREN expression RPAREN OPBR funcbody CLBR
-              | IF LPAREN expression RPAREN OPBR funcbody CLBR ELSE OPBR funcbody CLBR'''
+    '''branch : IF LPAREN expression RPAREN OPBR codeblock CLBR
+              | IF LPAREN expression RPAREN OPBR codeblock CLBR ELSE OPBR codeblock CLBR'''
     cond = p[3]
     ifconseq = p[6]
     elseconseq = [] if len(p) == 8 else p[10]
@@ -128,7 +128,7 @@ def p_expression_proccall(p):
     p[0] = FuncCallAST(funcname, exprlist)
 
 def p_while(p):
-    '''while : WHILE LPAREN expression RPAREN OPBR funcbody CLBR'''
+    '''while : WHILE LPAREN expression RPAREN OPBR codeblock CLBR'''
     cond = p[3]
     body = p[6]
     p[0] = WhileAST(cond, body)

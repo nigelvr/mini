@@ -13,8 +13,8 @@ def list_assign(L, indicies, value):
         U[indicies.pop(0)] = value
 
 # Return, IfElse, While, Assignment, FuncCall (procedure)
-def emit_funcbody(funcbody : list, env):
-    for funcpart in funcbody:
+def emit_codeblock(codeblock : list, env):
+    for funcpart in codeblock:
         if isinstance(funcpart, ReturnAST):
             return funcpart.emit(env)
         elif isinstance(funcpart, IfElseAST) or isinstance(funcpart, WhileAST):
@@ -92,10 +92,10 @@ class ListAST(ValueAST):
         return self.value[idx].emit(env)
     
 class FuncdefAST(AST):
-    def __init__(self, funcname : str, argnames : list[str], funcbody : list[AST]):
+    def __init__(self, funcname : str, argnames : list[str], codeblock : list[AST]):
         self.funcname = funcname
         self.argnames = argnames
-        self.funcbody = funcbody
+        self.codeblock = codeblock
     
     def emit(self, env):
         env[self.funcname] = self
@@ -124,7 +124,7 @@ class FuncCallAST(AST):
         for argname, argexpr in self.bound_args(tmpenv).items():
             tmpenv[argname] = argexpr.emit(tmpenv)
 
-        return emit_funcbody(func.funcbody, tmpenv)
+        return emit_codeblock(func.codeblock, tmpenv)
 
 class ReturnAST(AST):
     def __init__(self, expr):
@@ -169,24 +169,24 @@ class AssignmentAST(AST):
         return env[self.symbol]
         
 class IfElseAST(AST):
-    def __init__(self, cond : AST, ifconseq : list[AST], elseconseq : list[AST]):
+    def __init__(self, cond : AST, ifblock : list[AST], elseblock : list[AST]):
         self.cond = cond
-        self.ifconseq = ifconseq
-        self.elseconseq = elseconseq
+        self.ifblock = ifblock
+        self.elseblock = elseblock
 
     def emit(self, env):
         if self.cond.emit(env):
-            return emit_funcbody(self.ifconseq, env)
-        return emit_funcbody(self.elseconseq, env)
+            return emit_codeblock(self.ifblock, env)
+        return emit_codeblock(self.elseblock, env)
     
 class WhileAST(AST):
-    def __init__(self, cond, body):
+    def __init__(self, cond, codeblock):
         self.cond = cond
-        self.body = body
+        self.codeblock = codeblock
 
     def emit(self, env):
         while self.cond.emit(env):
-            v = emit_funcbody(self.body, env)
+            v = emit_codeblock(self.codeblock, env)
             if v is not None:
                 return v
 
