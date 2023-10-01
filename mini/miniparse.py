@@ -5,6 +5,7 @@ from .minilex import tokens
 from .miniast import (
     AST,
     FuncCallAST,
+    CodeBlockAST,
     FuncdefAST,
     IdentAST,
     NumberAST,
@@ -42,12 +43,12 @@ def flatten(L, class_instance, cond = lambda x : True):
 def production_to_function(p):
     funcname = p[2]
     arglist = []
-    codeblock = []
+    codeblock = CodeBlockAST([])
 
     if isinstance(p[4], list): # we have an arglist
         arglist = p[4]
 
-    if isinstance(p[len(p)-2], list): # we have a function body
+    if isinstance(p[len(p)-2], CodeBlockAST): # we have a function body
         codeblock = p[len(p)-2]
 
     return FuncdefAST(funcname, arglist, codeblock)
@@ -88,7 +89,7 @@ def p_arglist(p):
 def p_codeblock(p):
     '''codeblock : funcpart
                  | codeblock funcpart'''
-    p[0] = flatten(p[1:], AST)
+    p[0] = CodeBlockAST(flatten(p[1:], AST))
 
 def p_funcpart(p):
     '''funcpart : ret
@@ -114,7 +115,7 @@ def p_branch(p):
               | IF LPAREN expression RPAREN OPBR codeblock CLBR ELSE OPBR codeblock CLBR'''
     cond = p[3]
     ifconseq = p[6]
-    elseconseq = [] if len(p) == 8 else p[10]
+    elseconseq = CodeBlockAST([]) if len(p) == 8 else p[10]
     p[0] = IfElseAST(cond, ifconseq, elseconseq)
 
 def p_expression_proccall(p):

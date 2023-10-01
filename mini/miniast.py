@@ -12,23 +12,6 @@ def list_assign(L, indicies, value):
             U = L[indicies.pop(0)]
         U[indicies.pop(0)] = value
 
-# Return, IfElse, While, Assignment, FuncCall (procedure)
-def emit_codeblock(codeblock : list, env):
-    for funcpart in codeblock:
-        if isinstance(funcpart, ReturnAST):
-            return funcpart.emit(env)
-        elif isinstance(funcpart, IfElseAST) or isinstance(funcpart, WhileAST):
-            val = funcpart.emit(env)
-            if val is not None: # this was a return statement
-                return val
-        elif isinstance(funcpart, AssignmentAST):
-            if funcpart.symbol in BasicEnvironment.keys():
-                funcpart.emit(BasicEnvironment)
-            else:
-                funcpart.emit(env)
-        elif isinstance(funcpart, FuncCallAST): # procedure
-            funcpart.emit(env)
-
 '''
 Abstract class for our ASTs
 '''
@@ -91,6 +74,26 @@ class ListAST(ValueAST):
     def access(self, idx, env=None):
         return self.value[idx].emit(env)
     
+class CodeBlockAST(AST):
+    def __init__(self, parts : list[AST]):
+        self.parts = parts
+
+    def emit(self, env):
+        for part in self.parts:
+            if isinstance(part, ReturnAST):
+                return part.emit(env)
+            elif isinstance(part, IfElseAST) or isinstance(part, WhileAST) or isinstance(part, CodeBlockAST):
+                val = part.emit(env)
+                if val is not None: # this was a return statement
+                    return val
+            elif isinstance(part, AssignmentAST):
+                if part.symbol in BasicEnvironment.keys():
+                    part.emit(BasicEnvironment)
+                else:
+                    part.emit(env)
+            elif isinstance(part, FuncCallAST): # procedure
+                part.emit(env)
+
 class FuncdefAST(AST):
     def __init__(self, funcname : str, argnames : list[str], codeblock : list[AST]):
         self.funcname = funcname
@@ -128,7 +131,7 @@ class FuncCallAST(AST):
         for argname, argexpr in self.bound_args(tmpenv).items():
             tmpenv[argname] = argexpr.emit(tmpenv)
 
-        return emit_codeblock(func.codeblock, tmpenv)
+        return func.codeblock.emit(tmpenv) # emit_codeblock(func.codeblock, tmpenv)
 
 class ReturnAST(AST):
     def __init__(self, expr):
@@ -180,8 +183,8 @@ class IfElseAST(AST):
 
     def emit(self, env):
         if self.cond.emit(env):
-            return emit_codeblock(self.ifblock, env)
-        return emit_codeblock(self.elseblock, env)
+            return self.ifblock.emit(env) # emit_codeblock(self.ifblock, env)
+        return self.elseblock.emit(env) # emit_codeblock(self.elseblock, env)
     
 class WhileAST(AST):
     def __init__(self, cond, codeblock):
@@ -190,7 +193,7 @@ class WhileAST(AST):
 
     def emit(self, env):
         while self.cond.emit(env):
-            v = emit_codeblock(self.codeblock, env)
+            v = self.codeblock.emit(env) # emit_codeblock(self.codeblock, env)
             if v is not None:
                 return v
 

@@ -99,7 +99,6 @@ def test_invalid_program():
        x=1;
     }
     '''
-    errmsg = ''
     raised = None
     try:
        run(prog)

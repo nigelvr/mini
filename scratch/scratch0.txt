@@ -1,4 +1,0 @@
-def p_expression_list(p):
-    'expression : LSQB exprlist RSQB'
-    # exprlist = p[2]
-    p[0] = p[2] # exprlist

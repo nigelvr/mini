@@ -1,2 +1,0 @@
-print : print ( expression )
-      | print ( fstring, expression_list )
